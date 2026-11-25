@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="assets/icon/icon.png" alt="Catatkas Logo" width="110" height="110" />
 
   # 💰 Catatkas
 
