@@ -299,11 +299,30 @@ class _DetailRekanScreenState extends State<DetailRekanScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: FilledButton.icon(
-              onPressed: () {
-                Formatters.launchWhatsApp(
-                  phone: summary.partner.phone,
+              onPressed: () async {
+                final phone = summary.partner.phone.trim();
+                if (phone.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Nomor HP rekan ini belum diisi.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  return;
+                }
+                final ok = await Formatters.launchWhatsApp(
+                  phone: phone,
                   message: 'Halo ${summary.partner.name}, saya ingin mengingatkan catatan kas di CatatKas'
-                      ' sebesar ${Formatters.rupiah(summary.netBalance.abs())}. Terima kasih!');
+                      ' sebesar ${Formatters.rupiah(summary.netBalance.abs())}. Terima kasih!',
+                );
+                if (!ok && context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Tidak dapat membuka WhatsApp. Pastikan WhatsApp terpasang.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               },
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.secondary,
@@ -559,11 +578,30 @@ class _DetailRekanScreenState extends State<DetailRekanScreen> {
             'Tagihan aktif ${summary.partner.name} masih berjalan',
             style: const TextStyle(color: Colors.white, fontSize: 12.5, fontWeight: FontWeight.w500))),
           FilledButton(
-            onPressed: () {
-              Formatters.launchWhatsApp(
-                phone: summary.partner.phone,
+            onPressed: () async {
+              final phone = summary.partner.phone.trim();
+              if (phone.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Nomor HP rekan ini belum diisi.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+                return;
+              }
+              final ok = await Formatters.launchWhatsApp(
+                phone: phone,
                 message: 'Halo ${summary.partner.name}, mengingatkan catatan kas sebesar '
-                    '${Formatters.rupiah(summary.netBalance.abs())}. Terima kasih!');
+                    '${Formatters.rupiah(summary.netBalance.abs())}. Terima kasih!',
+              );
+              if (!ok && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Tidak dapat membuka WhatsApp. Pastikan WhatsApp terpasang.'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
             },
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.secondary,

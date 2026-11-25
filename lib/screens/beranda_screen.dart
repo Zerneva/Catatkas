@@ -286,7 +286,7 @@ class BerandaScreen extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           _outlinedPill(context, Icons.chat_bubble_outline_rounded, 'Kirim Tagihan WA',
-              AppColors.piutang, () {
+              AppColors.piutang, () async {
             final target = store.upcomingDueSummaries.isNotEmpty
                 ? store.upcomingDueSummaries.first : null;
             if (target == null) {
@@ -294,11 +294,23 @@ class BerandaScreen extends StatelessWidget {
                   const SnackBar(content: Text('Tidak ada tagihan aktif.'), behavior: SnackBarBehavior.floating));
               return;
             }
-            Formatters.launchWhatsApp(
-              phone: target.partner.phone,
+            final phone = target.partner.phone.trim();
+            if (phone.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Nomor HP rekan ini belum diisi.'), behavior: SnackBarBehavior.floating),
+              );
+              return;
+            }
+            final ok = await Formatters.launchWhatsApp(
+              phone: phone,
               message: 'Halo ${target.partner.name}, mengingatkan catatan sebesar '
                   '${Formatters.rupiah(target.netBalance.abs())} yang akan jatuh tempo. Terima kasih!',
             );
+            if (!ok && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Tidak dapat membuka WhatsApp. Pastikan WhatsApp terpasang.'), behavior: SnackBarBehavior.floating),
+              );
+            }
           }),
         ],
       ),
@@ -389,13 +401,26 @@ class BerandaScreen extends StatelessWidget {
                 const SizedBox(height: 6),
                 _actionPill(context, isPiutang ? 'Tagih' : 'Bayar',
                     isPiutang ? Icons.send_rounded : Icons.payments_outlined,
-                    isPiutang ? AppColors.piutang : AppColors.primary, () {
+                    isPiutang ? AppColors.piutang : AppColors.primary, () async {
                   if (isPiutang) {
-                    Formatters.launchWhatsApp(
-                      phone: summary.partner.phone,
+                    final phone = summary.partner.phone.trim();
+                    if (phone.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Nomor HP rekan ini belum diisi.'), behavior: SnackBarBehavior.floating),
+                      );
+                      return;
+                    }
+                    final ok = await Formatters.launchWhatsApp(
+                      phone: phone,
                       message: 'Halo ${summary.partner.name}, mengingatkan catatan piutang sebesar '
                           '${Formatters.rupiah(summary.netBalance.abs())} jatuh tempo '
-                          '${Formatters.shortDate(due)}. Terima kasih!');
+                          '${Formatters.shortDate(due)}. Terima kasih!',
+                    );
+                    if (!ok && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Tidak dapat membuka WhatsApp. Pastikan WhatsApp terpasang.'), behavior: SnackBarBehavior.floating),
+                      );
+                    }
                   } else {
                     CatatTransaksiSheet.show(context, store: store,
                         initialPartnerId: summary.partner.id,

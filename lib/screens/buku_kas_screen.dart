@@ -365,12 +365,30 @@ class _BukuKasScreenState extends State<BukuKasScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     InkWell(
-                      onTap: () {
-                        Formatters.launchWhatsApp(
-                          phone: p.phone,
+                      onTap: () async {
+                        final phone = p.phone.trim();
+                        if (phone.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Nomor HP rekan ini belum diisi.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+                        final ok = await Formatters.launchWhatsApp(
+                          phone: phone,
                           message:
                               'Halo ${p.name}, berikut catatan kas kita di CatatKas sebesar ${Formatters.rupiah(summary.netBalance.abs())}.',
                         );
+                        if (!ok && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tidak dapat membuka WhatsApp. Pastikan WhatsApp terpasang.'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
                       },
                       borderRadius: BorderRadius.circular(8),
                       child: Container(

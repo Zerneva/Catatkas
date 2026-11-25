@@ -105,13 +105,33 @@ class Formatters {
     required String message,
   }) async {
     var digits = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (digits.isEmpty) return false;
     if (digits.startsWith('0')) {
       digits = '62${digits.substring(1)}';
+    } else if (digits.startsWith('8')) {
+      digits = '62$digits';
     }
-    final uri = Uri.parse('https://wa.me/$digits?text=${Uri.encodeComponent(message)}');
-    if (await canLaunchUrl(uri)) {
-      return launchUrl(uri, mode: LaunchMode.externalApplication);
+
+    final encodedMsg = Uri.encodeComponent(message);
+
+    // 1. Coba deep link native WhatsApp (whatsapp://send?phone=...&text=...)
+    final nativeUri = Uri.parse('whatsapp://send?phone=$digits&text=$encodedMsg');
+    try {
+      if (await canLaunchUrl(nativeUri)) {
+        return await launchUrl(nativeUri, mode: LaunchMode.externalApplication);
+      }
+    } catch (_) {}
+
+    // 2. Fallback ke URL wa.me
+    final webUri = Uri.parse('https://wa.me/$digits?text=$encodedMsg');
+    try {
+      return await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      try {
+        return await launchUrl(webUri, mode: LaunchMode.platformDefault);
+      } catch (_) {
+        return false;
+      }
     }
-    return false;
   }
 }
